@@ -104,7 +104,7 @@ export default function Home() {
           </div>
         </div>
         <motion.div
-          className="hidden md:block relative"
+          className="relative mt-8 md:mt-0"
           whileHover={{ scale: 1.02 }}
           transition={{ type: "spring", stiffness: 300 }}
         >

@@ -1,80 +1,105 @@
-/**
- * LocalStorage əsaslı data store — mock backend rolunu oynayır.
- * Real backend hazır olduqda bu funksiyalar API çağırışları ilə əvəzlənəcək
- * (hər funksiyanın üzərində uyğun endpoint qeyd olunub — bax BACKEND_GUIDE.md).
- */
-import { MOCK_SHIFTS, MOCK_VOLUNTEERS } from "./mockData";
+import axios from "axios";
 import { Shift, Volunteer } from "./types";
 
-const VOL_KEY = "dost_volunteers_v1";
-const SHIFT_KEY = "dost_shifts_v1";
+const API_BASE = import.meta.env.VITE_API_URL || "https://volunteermanagementsystem-backend.onrender.com/api";
 
-function load<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
-}
+const api = axios.create({
+  baseURL: API_BASE,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
-function save<T>(key: string, value: T) {
-  localStorage.setItem(key, JSON.stringify(value));
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: any;
 }
 
 // ---- Könüllülər (API: GET/POST/PUT/DELETE /api/volunteers) ----
 
-export function getVolunteers(): Volunteer[] {
-  const v = load<Volunteer[] | null>(VOL_KEY, null);
-  if (!v) {
-    save(VOL_KEY, MOCK_VOLUNTEERS);
-    return MOCK_VOLUNTEERS;
+export async function getVolunteers(): Promise<Volunteer[]> {
+  try {
+    const res = await api.get<ApiResponse<Volunteer[]>>("/volunteers");
+    if (res.data.success && res.data.data) {
+      // Backend might return numeric IDs from PostgreSQL, ensure they are strings for the frontend
+      return res.data.data.map((v: any) => ({ ...v, id: String(v.id) }));
+    }
+    return [];
+  } catch (error) {
+    console.error("Failed to fetch volunteers:", error);
+    return [];
   }
-  return v;
 }
 
-export function saveVolunteers(vols: Volunteer[]) {
-  save(VOL_KEY, vols);
+export async function addVolunteer(v: Omit<Volunteer, "id"> | Volunteer): Promise<void> {
+  try {
+    // We send without id if it's a new volunteer, backend will assign id
+    await api.post<ApiResponse<Volunteer>>("/volunteers", v);
+  } catch (error) {
+    console.error("Failed to add volunteer:", error);
+    throw error;
+  }
 }
 
-export function addVolunteer(v: Volunteer) {
-  const all = getVolunteers();
-  saveVolunteers([...all, v]);
-}
-
-export function updateVolunteer(v: Volunteer) {
-  const all = getVolunteers().map((x) => (x.id === v.id ? v : x));
-  saveVolunteers(all);
+export async function updateVolunteer(v: Volunteer): Promise<void> {
+  try {
+    await api.put<ApiResponse<Volunteer>>(`/volunteers/${v.id}`, v);
+  } catch (error) {
+    console.error("Failed to update volunteer:", error);
+    throw error;
+  }
 }
 
 /** Soft delete — arxiv məlumatları qorunur (SRS bölmə 11) */
-export function deactivateVolunteer(id: string) {
-  const all = getVolunteers().map((x) => (x.id === id ? { ...x, active: false } : x));
-  saveVolunteers(all);
+export async function deactivateVolunteer(id: string): Promise<void> {
+  try {
+    await api.delete<ApiResponse<any>>(`/volunteers/${id}`);
+  } catch (error) {
+    console.error("Failed to deactivate volunteer:", error);
+    throw error;
+  }
 }
 
 // ---- Növbələr / Arxiv (API: GET/POST /api/shifts) ----
 
-export function getShifts(): Shift[] {
-  const s = load<Shift[] | null>(SHIFT_KEY, null);
-  if (!s) {
-    save(SHIFT_KEY, MOCK_SHIFTS);
-    return MOCK_SHIFTS;
+export async function getShifts(): Promise<Shift[]> {
+  try {
+    const res = await api.get<ApiResponse<Shift[]>>("/shifts");
+    if (res.data.success && res.data.data) {
+      return res.data.data.map((s: any) => ({ ...s, id: String(s.id) }));
+    }
+    return [];
+  } catch (error) {
+    console.error("Failed to fetch shifts:", error);
+    return [];
   }
-  return s;
 }
 
-export function saveShift(shift: Shift) {
-  const all = getShifts().filter((s) => s.id !== shift.id);
-  save(SHIFT_KEY, [shift, ...all]);
+export async function getShiftById(id: string): Promise<Shift | undefined> {
+  try {
+    const res = await api.get<ApiResponse<Shift>>(`/shifts/${id}`);
+    if (res.data.success && res.data.data) {
+      return { ...res.data.data, id: String(res.data.data.id) };
+    }
+    return undefined;
+  } catch (error) {
+    console.error("Failed to fetch shift:", error);
+    return undefined;
+  }
 }
 
-export function getShiftById(id: string): Shift | undefined {
-  return getShifts().find((s) => s.id === id);
+export async function saveShift(shift: Partial<Shift>): Promise<void> {
+  try {
+    await api.post<ApiResponse<Shift>>("/shifts", shift);
+  } catch (error) {
+    console.error("Failed to save shift:", error);
+    throw error;
+  }
 }
 
+// Keep genId just in case some local state still needs it temporarily,
+// though mostly backend handles IDs now.
 export function genId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
-

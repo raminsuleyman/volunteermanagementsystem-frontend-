@@ -28,7 +28,6 @@ import {
 import {
   addVolunteer,
   deactivateVolunteer,
-  genId,
   getVolunteers,
   updateVolunteer,
 } from "@/lib/store";
@@ -83,9 +82,17 @@ export default function Volunteers() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [deleteTarget, setDeleteTarget] = useState<Volunteer | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const refresh = () => setVolunteers(getVolunteers());
-  useEffect(refresh, []);
+  const refresh = async () => {
+    setIsLoading(true);
+    setVolunteers(await getVolunteers());
+    setIsLoading(false);
+  };
+  
+  useEffect(() => {
+    refresh();
+  }, []);
 
   const active = useMemo(
     () =>
@@ -121,40 +128,57 @@ export default function Volunteers() {
       shifts: p.shifts.includes(s) ? p.shifts.filter((x) => x !== s) : [...p.shifts, s],
     }));
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.firstName.trim() || !form.lastName.trim()) {
       toast.error("Ad və soyad mütləqdir");
       return;
     }
-    const data: Volunteer = {
-      id: form.id ?? genId("v"),
-      firstName: form.firstName.trim(),
-      lastName: form.lastName.trim(),
-      shifts: form.shifts,
-      clubCount: Number(form.clubCount) || 0,
-      initiativeCount: Number(form.initiativeCount) || 0,
-      remainingLeaveHours: Number(form.remainingLeaveHours) || 0,
-      active: true,
-    };
-    if (form.id) {
-      updateVolunteer(data);
-      toast.success("Könüllü məlumatları yeniləndi");
-    } else {
-      addVolunteer(data);
-      toast.success("Yeni könüllü əlavə edildi");
+    try {
+      if (form.id) {
+        const data: Volunteer = {
+          id: form.id,
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+          shifts: form.shifts,
+          clubCount: Number(form.clubCount) || 0,
+          initiativeCount: Number(form.initiativeCount) || 0,
+          remainingLeaveHours: Number(form.remainingLeaveHours) || 0,
+          active: true,
+        };
+        await updateVolunteer(data);
+        toast.success("Könüllü məlumatları yeniləndi");
+      } else {
+        const data = {
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+          shifts: form.shifts,
+          clubCount: Number(form.clubCount) || 0,
+          initiativeCount: Number(form.initiativeCount) || 0,
+          remainingLeaveHours: Number(form.remainingLeaveHours) || 0,
+          active: true,
+        };
+        await addVolunteer(data as Volunteer);
+        toast.success("Yeni könüllü əlavə edildi");
+      }
+      setDialogOpen(false);
+      refresh();
+    } catch (err) {
+      toast.error("Əməliyyat zamanı xəta baş verdi");
     }
-    setDialogOpen(false);
-    refresh();
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!deleteTarget) return;
-    deactivateVolunteer(deleteTarget.id);
-    toast.success(
-      `${deleteTarget.firstName} aktiv siyahıdan çıxarıldı — arxiv qeydləri qorunur`
-    );
-    setDeleteTarget(null);
-    refresh();
+    try {
+      await deactivateVolunteer(deleteTarget.id);
+      toast.success(
+        `${deleteTarget.firstName} aktiv siyahıdan çıxarıldı — arxiv qeydləri qorunur`
+      );
+      setDeleteTarget(null);
+      refresh();
+    } catch (err) {
+      toast.error("Silmə zamanı xəta baş verdi");
+    }
   };
 
   return (
@@ -262,7 +286,14 @@ export default function Volunteers() {
                   </TableRow>
                 ))}
               </AnimatePresence>
-              {active.length === 0 && (
+              {isLoading && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                    Yüklənir...
+                  </TableCell>
+                </TableRow>
+              )}
+              {!isLoading && active.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
                     Könüllü tapılmadı

@@ -204,7 +204,7 @@ export default function ShiftBoard() {
       return;
     }
     setDraft(JSON.parse(raw));
-    setVolunteers(getVolunteers());
+    getVolunteers().then(setVolunteers).catch(console.error);
   }, [navigate]);
 
   const slots: TimeSlot[] = useMemo(
@@ -280,7 +280,7 @@ export default function ShiftBoard() {
     });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const shift: Shift = {
       id: genId("shift"),
       date: draft.date,
@@ -292,10 +292,14 @@ export default function ShiftBoard() {
       notes,
       savedAt: new Date().toISOString(),
     };
-    saveShift(shift);
-    setSavedShift(shift);
-    sessionStorage.removeItem("dost_draft_shift");
-    toast.success("Növbə yadda saxlanıldı və arxivə əlavə edildi");
+    try {
+      await saveShift(shift);
+      setSavedShift(shift);
+      sessionStorage.removeItem("dost_draft_shift");
+      toast.success("Növbə yadda saxlanıldı və arxivə əlavə edildi");
+    } catch (err) {
+      toast.error("Növbəni yadda saxlayarkən xəta baş verdi");
+    }
   };
 
   const handleExport = () => {

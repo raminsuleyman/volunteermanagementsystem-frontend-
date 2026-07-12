@@ -48,9 +48,24 @@ export default function Archive() {
   const [dateFilter, setDateFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
 
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
-    setShifts(getShifts());
-    setVolunteers(getVolunteers());
+    (async () => {
+      try {
+        setIsLoading(true);
+        const [fetchedShifts, fetchedVolunteers] = await Promise.all([
+          getShifts(),
+          getVolunteers()
+        ]);
+        setShifts(fetchedShifts);
+        setVolunteers(fetchedVolunteers);
+      } catch (err) {
+        toast.error("Məlumatlar yüklənərkən xəta baş verdi");
+      } finally {
+        setIsLoading(false);
+      }
+    })();
   }, []);
 
   const filtered = useMemo(
@@ -121,7 +136,17 @@ export default function Archive() {
       </motion.div>
 
       <AnimatePresence mode="wait">
-        {filtered.length === 0 ? (
+        {isLoading ? (
+          <motion.div 
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col items-center py-12 text-center"
+          >
+            <p className="text-muted-foreground mt-4">Yüklənir...</p>
+          </motion.div>
+        ) : filtered.length === 0 ? (
           <motion.div 
             key="empty"
             initial={{ opacity: 0, scale: 0.9 }}

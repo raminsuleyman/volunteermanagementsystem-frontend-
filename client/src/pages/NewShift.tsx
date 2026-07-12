@@ -56,7 +56,14 @@ export default function NewShift() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    setVolunteers(getVolunteers().filter((v) => v.active));
+    (async () => {
+      try {
+        const vols = await getVolunteers();
+        setVolunteers(vols.filter((v) => v.active));
+      } catch (err) {
+        toast.error("Könüllülər yüklənərkən xəta baş verdi");
+      }
+    })();
   }, []);
 
   const filtered = useMemo(

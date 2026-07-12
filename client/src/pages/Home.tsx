@@ -41,10 +41,23 @@ const itemVariants = {
 export default function Home() {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [volunteerCount, setVolunteerCount] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setShifts(getShifts());
-    setVolunteerCount(getVolunteers().filter((v) => v.active).length);
+    (async () => {
+      try {
+        const [fetchedShifts, fetchedVolunteers] = await Promise.all([
+          getShifts(),
+          getVolunteers()
+        ]);
+        setShifts(fetchedShifts);
+        setVolunteerCount(fetchedVolunteers.filter((v) => v.active).length);
+      } catch (error) {
+        console.error("Failed to load initial data", error);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   const recent = [...shifts]

@@ -51,11 +51,29 @@ export default function ArchiveDetail() {
   const { id } = useParams<{ id: string }>();
   const [shift, setShift] = useState<Shift | null>(null);
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setShift(getShiftById(id) ?? null);
-    setVolunteers(getVolunteers());
+    (async () => {
+      try {
+        setIsLoading(true);
+        if (id) {
+          const shiftData = await getShiftById(id);
+          setShift(shiftData ?? null);
+        }
+        const vols = await getVolunteers();
+        setVolunteers(vols);
+      } catch (err) {
+        toast.error("Məlumatlar yüklənərkən xəta baş verdi");
+      } finally {
+        setIsLoading(false);
+      }
+    })();
   }, [id]);
+
+  if (isLoading) {
+    return <div className="container py-12 text-center text-muted-foreground">Yüklənir...</div>;
+  }
 
   if (!shift) {
     return (

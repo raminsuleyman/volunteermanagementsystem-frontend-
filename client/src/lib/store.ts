@@ -67,7 +67,11 @@ export async function getShifts(): Promise<Shift[]> {
   try {
     const res = await api.get<ApiResponse<Shift[]>>("/shifts");
     if (res.data.success && res.data.data) {
-      return res.data.data.map((s: any) => ({ ...s, id: String(s.id) }));
+      return res.data.data.map((s: any) => ({ 
+        ...s, 
+        id: String(s.id),
+        volunteerIds: s.volunteerIds?.map(String) || [] 
+      }));
     }
     return [];
   } catch (error) {
@@ -78,9 +82,22 @@ export async function getShifts(): Promise<Shift[]> {
 
 export async function getShiftById(id: string): Promise<Shift | undefined> {
   try {
-    const res = await api.get<ApiResponse<Shift>>(`/shifts/${id}`);
+    const res = await api.get<ApiResponse<any>>(`/shifts/${id}`);
     if (res.data.success && res.data.data) {
-      return { ...res.data.data, id: String(res.data.data.id) };
+      const data = res.data.data;
+      return { 
+        ...data, 
+        id: String(data.id),
+        volunteerIds: data.volunteerIds?.map(String) || [],
+        assignments: data.assignments ? Object.fromEntries(
+          Object.entries(data.assignments).map(([slotKey, areas]) => [
+            slotKey,
+            Object.fromEntries(
+              Object.entries(areas as Record<string, number[]>).map(([areaKey, ids]) => [areaKey, ids.map(String)])
+            )
+          ])
+        ) : {}
+      } as Shift;
     }
     return undefined;
   } catch (error) {
@@ -91,7 +108,19 @@ export async function getShiftById(id: string): Promise<Shift | undefined> {
 
 export async function saveShift(shift: Partial<Shift>): Promise<void> {
   try {
-    await api.post<ApiResponse<Shift>>("/shifts", shift);
+    const payload = {
+      ...shift,
+      volunteerIds: shift.volunteerIds?.map(Number),
+      assignments: shift.assignments ? Object.fromEntries(
+        Object.entries(shift.assignments).map(([slotKey, areas]) => [
+          slotKey,
+          Object.fromEntries(
+            Object.entries(areas).map(([areaKey, ids]) => [areaKey, ids.map(Number)])
+          )
+        ])
+      ) : {}
+    };
+    await api.post<ApiResponse<any>>("/shifts", payload);
   } catch (error) {
     console.error("Failed to save shift:", error);
     throw error;

@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { exportShiftToExcel } from "@/lib/excelExport";
-import { getShiftById, getVolunteers } from "@/lib/store";
+import { deleteShift, getShiftById, getVolunteers } from "@/lib/store";
 import {
   NOTE_LABELS,
   SERVICE_AREAS,
@@ -23,10 +23,10 @@ import {
   generateTimeSlots,
   shiftTypeInfo,
 } from "@/lib/types";
-import { ArrowLeft, Download, NotebookPen } from "lucide-react";
+import { ArrowLeft, Download, NotebookPen, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Link, useParams } from "wouter";
+import { Link, useLocation, useParams } from "wouter";
 
 const SHIFT_BADGE: Record<string, string> = {
   seher: "bg-amber-100 text-amber-800 border-amber-200",
@@ -49,9 +49,25 @@ const itemVariants = {
 
 export default function ArchiveDetail() {
   const { id } = useParams<{ id: string }>();
+  const [, navigate] = useLocation();
   const [shift, setShift] = useState<Shift | null>(null);
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!id) return;
+    if (!window.confirm("Bu növbəni arxivdən silmək istədiyinizə əminsiniz? Bu əməliyyat geri qaytarıla bilməz!")) return;
+    try {
+      setIsDeleting(true);
+      await deleteShift(id);
+      toast.success("Növbə arxivdən silindi");
+      navigate("/arxiv");
+    } catch (err) {
+      toast.error("Silinmə zamanı xəta baş verdi");
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -120,14 +136,26 @@ export default function ArchiveDetail() {
             </p>
           </div>
         </div>
-        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-          <Button
-            className="gap-2 shadow-md bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 transition-all border-none"
-            onClick={() => { exportShiftToExcel(shift, volunteers); toast.success("Excel faylı yükləndi"); }}
-          >
-            <Download className="w-4 h-4" /> Excel-ə ixrac et
-          </Button>
-        </motion.div>
+        <div className="flex items-center gap-2">
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              variant="destructive"
+              className="gap-2 shadow-md transition-all"
+              disabled={isDeleting}
+              onClick={handleDelete}
+            >
+              <Trash2 className="w-4 h-4" /> {isDeleting ? "Silinir..." : "Sil"}
+            </Button>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              className="gap-2 shadow-md bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 transition-all border-none"
+              onClick={() => { exportShiftToExcel(shift, volunteers); toast.success("Excel faylı yükləndi"); }}
+            >
+              <Download className="w-4 h-4" /> Excel
+            </Button>
+          </motion.div>
+        </div>
       </motion.div>
 
       {/* Könüllülər */}

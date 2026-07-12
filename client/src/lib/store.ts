@@ -127,6 +127,15 @@ export async function saveShift(shift: Partial<Shift>): Promise<void> {
   }
 }
 
+export async function deleteShift(id: string): Promise<void> {
+  try {
+    await api.delete<ApiResponse<any>>(`/shifts/${id}`);
+  } catch (error) {
+    console.error("Failed to delete shift:", error);
+    throw error;
+  }
+}
+
 // Keep genId just in case some local state still needs it temporarily,
 // though mostly backend handles IDs now.
 export function genId(prefix: string): string {

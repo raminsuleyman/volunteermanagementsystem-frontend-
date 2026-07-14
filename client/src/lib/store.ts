@@ -63,9 +63,10 @@ export async function deactivateVolunteer(id: string): Promise<void> {
 
 // ---- Növbələr / Arxiv (API: GET/POST /api/shifts) ----
 
-export async function getShifts(): Promise<Shift[]> {
+export async function getShifts(status?: "draft" | "completed"): Promise<Shift[]> {
   try {
-    const res = await api.get<ApiResponse<Shift[]>>("/shifts");
+    const url = status ? `/shifts?status=${status}` : "/shifts";
+    const res = await api.get<ApiResponse<Shift[]>>(url);
     if (res.data.success && res.data.data) {
       return res.data.data.map((s: any) => ({ 
         ...s, 
@@ -106,10 +107,11 @@ export async function getShiftById(id: string): Promise<Shift | undefined> {
   }
 }
 
-export async function saveShift(shift: Partial<Shift>): Promise<void> {
+export async function saveShift(shift: Partial<Shift>, status: "draft" | "completed" = "completed"): Promise<any> {
   try {
     const payload = {
       ...shift,
+      status: shift.status || status,
       volunteerIds: shift.volunteerIds?.map(Number),
       assignments: shift.assignments ? Object.fromEntries(
         Object.entries(shift.assignments).map(([slotKey, areas]) => [
@@ -120,11 +122,27 @@ export async function saveShift(shift: Partial<Shift>): Promise<void> {
         ])
       ) : {}
     };
-    await api.post<ApiResponse<any>>("/shifts", payload);
+    if (shift.id && !shift.id.startsWith("shift-preview") && !shift.id.startsWith("shift-")) {
+      // Mövcud sətir varsa (və genId deyilsə) PUT
+      const res = await api.put<ApiResponse<any>>(`/shifts/${shift.id}`, payload);
+      return res.data.data;
+    } else {
+      const res = await api.post<ApiResponse<any>>("/shifts", payload);
+      return res.data.data;
+    }
   } catch (error) {
     console.error("Failed to save shift:", error);
     throw error;
   }
+}
+
+export async function saveDraft(shift: Partial<Shift>): Promise<Shift> {
+  const res = await saveShift(shift, "draft");
+  return {
+    ...res,
+    id: String(res.id),
+    volunteerIds: res.volunteerIds?.map(String) || [],
+  } as Shift;
 }
 
 export async function deleteShift(id: string): Promise<void> {

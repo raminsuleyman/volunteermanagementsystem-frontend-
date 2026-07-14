@@ -23,7 +23,7 @@ import {
   generateTimeSlots,
   shiftTypeInfo,
 } from "@/lib/types";
-import { ArrowLeft, Download, NotebookPen, Trash2 } from "lucide-react";
+import { ArrowLeft, Download, NotebookPen, Trash2, Edit } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Link, useLocation, useParams } from "wouter";
@@ -107,6 +107,9 @@ export default function ArchiveDetail() {
     return v ? `${v.firstName} ${v.lastName}` : "—";
   };
 
+  const isEditable = shift.status === "draft" || 
+    (new Date().getTime() - new Date(shift.savedAt).getTime()) < 24 * 60 * 60 * 1000;
+
   return (
     <motion.div 
       className="container py-8 space-y-6"
@@ -137,6 +140,20 @@ export default function ArchiveDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {isEditable && (
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                variant="outline"
+                className="gap-2 shadow-md transition-all hover:bg-primary hover:text-white border-primary/50 text-primary"
+                onClick={() => {
+                  sessionStorage.setItem("dost_draft_shift", JSON.stringify(shift));
+                  navigate("/novbe/board");
+                }}
+              >
+                <Edit className="w-4 h-4" /> Redaktə et
+              </Button>
+            </motion.div>
+          )}
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               variant="destructive"

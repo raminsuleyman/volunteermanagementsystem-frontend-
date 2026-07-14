@@ -19,7 +19,8 @@ import { SHIFT_TYPES, Shift, Volunteer, shiftTypeInfo } from "@/lib/types";
 import { Calendar, Download, Eye, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
+import { ArrowRight } from "lucide-react";
 
 const EMPTY_IMG = "/logo.png";
 
@@ -28,6 +29,8 @@ const SHIFT_BADGE: Record<string, string> = {
   gunorta: "bg-orange-100 text-orange-800 border-orange-200",
   axsam: "bg-indigo-100 text-indigo-800 border-indigo-200",
 };
+
+const DRAFT_BADGE = "bg-yellow-100 text-yellow-800 border-yellow-300";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -49,6 +52,19 @@ export default function Archive() {
   const [typeFilter, setTypeFilter] = useState("all");
 
   const [isLoading, setIsLoading] = useState(true);
+  const [, navigate] = useLocation();
+
+  const handleContinueDraft = (s: Shift) => {
+    sessionStorage.setItem("dost_draft_shift", JSON.stringify({
+      id: s.id,
+      date: s.date,
+      shiftType: s.shiftType,
+      teamLeaderFirstName: s.teamLeaderFirstName,
+      teamLeaderLastName: s.teamLeaderLastName,
+      volunteerIds: s.volunteerIds
+    }));
+    navigate("/novbe/board");
+  };
 
   useEffect(() => {
     (async () => {
@@ -179,9 +195,16 @@ export default function Archive() {
                     <CardContent className="pt-5 space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="font-bold text-lg font-mono-time">{s.date}</div>
-                        <Badge variant="outline" className={SHIFT_BADGE[s.shiftType]}>
-                          {info.label} · {info.start}–{info.end}
-                        </Badge>
+                        <div className="flex gap-2">
+                          {s.status === "draft" && (
+                            <Badge variant="outline" className={DRAFT_BADGE}>
+                              Taslaq
+                            </Badge>
+                          )}
+                          <Badge variant="outline" className={SHIFT_BADGE[s.shiftType]}>
+                            {info.label} · {info.start}–{info.end}
+                          </Badge>
+                        </div>
                       </div>
                       <div className="text-sm text-muted-foreground space-y-1">
                         <div>TL: <span className="text-foreground font-medium">{s.teamLeaderFirstName} {s.teamLeaderLastName}</span></div>
@@ -190,11 +213,17 @@ export default function Archive() {
                         </div>
                       </div>
                       <div className="flex gap-2 pt-1">
-                        <Link href={`/arxiv/${s.id}`} className="flex-1">
-                          <Button variant="outline" size="sm" className="w-full gap-1.5 hover:bg-primary/5 transition-colors">
-                            <Eye className="w-3.5 h-3.5" /> Bax
+                        {s.status === "draft" ? (
+                          <Button size="sm" className="w-full flex-1 gap-1.5 transition-colors bg-yellow-500 hover:bg-yellow-600 text-white" onClick={() => handleContinueDraft(s)}>
+                            <ArrowRight className="w-3.5 h-3.5" /> Davam et
                           </Button>
-                        </Link>
+                        ) : (
+                          <Link href={`/arxiv/${s.id}`} className="flex-1">
+                            <Button variant="outline" size="sm" className="w-full gap-1.5 hover:bg-primary/5 transition-colors">
+                              <Eye className="w-3.5 h-3.5" /> Bax
+                            </Button>
+                          </Link>
+                        )}
                         <Button size="sm" variant="outline" className="gap-1.5 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-colors" onClick={() => handleExport(s)}>
                           <Download className="w-3.5 h-3.5" /> Excel
                         </Button>

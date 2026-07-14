@@ -102,6 +102,7 @@ export interface Shift {
   assignments: Record<string, SlotAssignments>;
   notes: ShiftNotes;
   savedAt: string; // ISO datetime
+  status?: "draft" | "completed";
 }
 
 /** Növbə tipinə görə 6 x 30 dəqiqəlik zaman intervalı yaradır (SRS bölmə 4, addım 4) */

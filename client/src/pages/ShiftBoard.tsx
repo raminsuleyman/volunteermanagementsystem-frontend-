@@ -223,8 +223,8 @@ export default function ShiftBoard() {
         try {
           const fullDraft = await getShiftById(existing.id);
           if (fullDraft) {
-            // Əgər tam detalda könüllülər varsa, onları draft state-ə yenilə
-            if (fullDraft.volunteerIds && fullDraft.volunteerIds.length > 0) {
+            // Yalnız əgər sessionStorage-dakı draft-da könüllülər yoxdursa (Arxivdən gələndə), backend-dən götür
+            if (fullDraft.volunteerIds && fullDraft.volunteerIds.length > 0 && (!parsedDraft.volunteerIds || parsedDraft.volunteerIds.length === 0)) {
               setDraft(prev => prev ? { ...prev, volunteerIds: fullDraft.volunteerIds.map(String) } : null);
             }
             if (fullDraft.assignments && Object.keys(fullDraft.assignments).length > 0) {

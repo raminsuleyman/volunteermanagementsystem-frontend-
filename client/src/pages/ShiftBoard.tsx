@@ -32,7 +32,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { exportShiftToExcel } from "@/lib/excelExport";
-import { genId, getVolunteers, saveShift, saveDraft, getShifts } from "@/lib/store";
+import { genId, getVolunteers, saveShift, saveDraft, getShifts, getShiftById } from "@/lib/store";
 import {
   EMPTY_NOTES,
   NOTE_LABELS,
@@ -208,31 +208,34 @@ export default function ShiftBoard() {
     const parsedDraft: DraftShift = JSON.parse(raw);
     setDraft(parsedDraft);
     
-    // Yükləmə prosesi: əvvəlcə volunteer-ləri yükləyək, sonra draft-ı axtaraq
     Promise.all([
       getVolunteers(),
       getShifts("draft")
-    ]).then(([vols, drafts]) => {
+    ]).then(async ([vols, drafts]) => {
       setVolunteers(vols);
       const existing = drafts.find(
         (d) => d.date === parsedDraft.date && d.shiftType === parsedDraft.shiftType
       );
-      // Əgər backend-dən id ötürülübsə (Archive səhifəsindən "Redaktə et" və ya "Davam et" ilə)
-      // Və ya backend-də eyni günə draft tapılıbsa
-      if (parsedDraft.id) {
-        setDraftShiftId(parsedDraft.id);
-        // Bu hal redaktə üçündür (ArchiveDetail-dən gələrsə)
-        // Amma indi yalnız draft yükləmə kimi yazaq, çünki backend-də data artıq var
-        // Daha yaxşı: getShiftById ilə çəkmək və ya drafts içindən istifadə etmək
-      }
-      
       if (existing) {
         setDraftShiftId(existing.id);
-        if (existing.assignments && Object.keys(existing.assignments).length > 0) {
-          setAssignments(existing.assignments);
-        }
-        if (existing.notes) {
-          setNotes(existing.notes);
+        
+        // Taslağın bütün detallarını (volunteerIds, assignments, notes) yüklə
+        try {
+          const fullDraft = await getShiftById(existing.id);
+          if (fullDraft) {
+            // Əgər tam detalda könüllülər varsa, onları draft state-ə yenilə
+            if (fullDraft.volunteerIds && fullDraft.volunteerIds.length > 0) {
+              setDraft(prev => prev ? { ...prev, volunteerIds: fullDraft.volunteerIds.map(String) } : null);
+            }
+            if (fullDraft.assignments && Object.keys(fullDraft.assignments).length > 0) {
+              setAssignments(fullDraft.assignments);
+            }
+            if (fullDraft.notes) {
+              setNotes(fullDraft.notes);
+            }
+          }
+        } catch (err) {
+          console.error("Draft detalları yüklənə bilmədi:", err);
         }
       } else if (parsedDraft.id && (parsedDraft as any).assignments) {
         // Redaktə rejimi: əgər tam obyekt sessionStorage-da gəlibsə

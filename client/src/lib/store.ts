@@ -130,8 +130,8 @@ export async function saveShift(shift: Partial<Shift>, status: "draft" | "comple
       const res = await api.post<ApiResponse<any>>("/shifts", payload);
       return res.data.data;
     }
-  } catch (error) {
-    console.error("Failed to save shift:", error);
+  } catch (error: any) {
+    console.error("Failed to save shift:", error.response?.data || error.message);
     throw error;
   }
 }

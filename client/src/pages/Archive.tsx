@@ -14,9 +14,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { exportShiftToExcel } from "@/lib/excelExport";
-import { getShifts, getVolunteers } from "@/lib/store";
+import { getShifts, getVolunteers, deleteShift } from "@/lib/store";
 import { SHIFT_TYPES, Shift, Volunteer, shiftTypeInfo } from "@/lib/types";
-import { Calendar, Download, Eye, Users } from "lucide-react";
+import { Calendar, Download, Eye, Users, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Link, useLocation } from "wouter";
@@ -64,6 +64,17 @@ export default function Archive() {
       volunteerIds: s.volunteerIds
     }));
     navigate("/novbe/board");
+  };
+
+  const handleDeleteDraft = async (id: string) => {
+    if (!confirm("Bu taslağı silmək istədiyinizə əminsiniz?")) return;
+    try {
+      await deleteShift(id);
+      setShifts((prev) => prev.filter((s) => s.id !== id));
+      toast.success("Taslaq silindi");
+    } catch (err) {
+      toast.error("Silinərkən xəta baş verdi");
+    }
   };
 
   useEffect(() => {
@@ -214,9 +225,14 @@ export default function Archive() {
                       </div>
                       <div className="flex gap-2 pt-1">
                         {s.status === "draft" ? (
-                          <Button size="sm" className="w-full flex-1 gap-1.5 transition-colors bg-yellow-500 hover:bg-yellow-600 text-white" onClick={() => handleContinueDraft(s)}>
-                            <ArrowRight className="w-3.5 h-3.5" /> Davam et
-                          </Button>
+                          <>
+                            <Button size="sm" className="flex-1 gap-1.5 transition-colors bg-yellow-500 hover:bg-yellow-600 text-white" onClick={() => handleContinueDraft(s)}>
+                              <ArrowRight className="w-3.5 h-3.5" /> Davam et
+                            </Button>
+                            <Button size="sm" variant="destructive" className="gap-1.5 transition-colors flex-none px-3" onClick={() => handleDeleteDraft(s.id)}>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </>
                         ) : (
                           <Link href={`/arxiv/${s.id}`} className="flex-1">
                             <Button variant="outline" size="sm" className="w-full gap-1.5 hover:bg-primary/5 transition-colors">

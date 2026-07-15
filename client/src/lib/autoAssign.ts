@@ -52,23 +52,30 @@ export function autoAssignShift(
     if (!assignments[slotId]) assignments[slotId] = {};
     const currentSlotStartTime = timeToMinutes(slot.start);
 
+    // Əvvəlcə seçilmiş bütün sahələri cari slot üçün boş massiv olaraq inisializasiya edirik (əgər yoxdursa)
     for (const areaId of selectedAreaIds) {
       if (!assignments[slotId][areaId]) {
         assignments[slotId][areaId] = [];
       }
+    }
 
-      // Əgər bu sahə bu slotda artıq doludursa, keç
-      if (assignments[slotId][areaId].length > 0) {
-        continue;
-      }
+    // Bu slotda hələ heç bir sahəyə təyin edilməmiş könüllüləri tapırıq
+    const unassignedVols = volunteers.filter(vol => {
+      const isAssignedInThisSlot = Object.values(assignments[slotId]).some(volsInArea => volsInArea.includes(vol.id));
+      return !isAssignedInThisSlot;
+    });
 
-      // Namizədləri tapırıq
-      const candidates = volunteers.filter(vol => {
-        // Şərt 1: Bu slotda başqa heç bir sahəyə təyin edilməyib
-        const isAssignedInThisSlot = Object.values(assignments[slotId]).some(volsInArea => volsInArea.includes(vol.id));
-        if (isAssignedInThisSlot) return false;
+    // Könüllüləri əvvəlki təyinat sayına görə sıralayırıq (ən az xidmət edənlər prioritetlidir)
+    unassignedVols.sort((a, b) => {
+      const countA = volunteerAssignmentCount[a.id] || 0;
+      const countB = volunteerAssignmentCount[b.id] || 0;
+      if (countA !== countB) return countA - countB;
+      return Math.random() - 0.5;
+    });
 
-        // Şərt 2: Eyni sahə üçün minimum 2.5 saat (150 dəq) qaydası
+    for (const vol of unassignedVols) {
+      // Bu könüllü üçün 2.5 saat (150 dəqiqə) qaydasını pozmayan uyğun sahələri tapırıq
+      const validAreas = selectedAreaIds.filter(areaId => {
         if (lastAreaAssignment[vol.id] && lastAreaAssignment[vol.id][areaId] !== undefined) {
           const lastTime = lastAreaAssignment[vol.id][areaId];
           if (currentSlotStartTime - lastTime < MIN_SAME_AREA_GAP_MINUTES) {
@@ -78,25 +85,26 @@ export function autoAssignShift(
         return true;
       });
 
-      if (candidates.length > 0) {
-        // Namizədləri ən az işləyəndən çoxa doğru sırala, bərabərlik varsa təsadüfi seç
-        candidates.sort((a, b) => {
-          const countA = volunteerAssignmentCount[a.id] || 0;
-          const countB = volunteerAssignmentCount[b.id] || 0;
+      if (validAreas.length > 0) {
+        // Uyğun sahələr arasından bu slotda ƏN AZ könüllüsü olanı seçirik (bərabər paylanma üçün)
+        validAreas.sort((a, b) => {
+          const countA = assignments[slotId][a].length;
+          const countB = assignments[slotId][b].length;
           if (countA !== countB) return countA - countB;
           return Math.random() - 0.5;
         });
 
-        const selectedVol = candidates[0];
-        assignments[slotId][areaId].push(selectedVol.id);
+        const selectedArea = validAreas[0];
+        assignments[slotId][selectedArea].push(vol.id);
         
         // İzləmə məlumatlarını yenilə
-        if (!lastAreaAssignment[selectedVol.id]) lastAreaAssignment[selectedVol.id] = {};
-        lastAreaAssignment[selectedVol.id][areaId] = currentSlotStartTime;
-        volunteerAssignmentCount[selectedVol.id] = (volunteerAssignmentCount[selectedVol.id] || 0) + 1;
+        if (!lastAreaAssignment[vol.id]) lastAreaAssignment[vol.id] = {};
+        lastAreaAssignment[vol.id][selectedArea] = currentSlotStartTime;
+        volunteerAssignmentCount[vol.id] = (volunteerAssignmentCount[vol.id] || 0) + 1;
         
         filledCount++;
       } else {
+        // Bu könüllü üçün bu slotda heç bir uyğun sahə tapılmadı (150 dəq qaydası mane oldu)
         unfilledCount++;
       }
     }

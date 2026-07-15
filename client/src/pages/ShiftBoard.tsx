@@ -54,7 +54,10 @@ import {
   Save,
   Trash2,
   Users,
+  Wand2,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { autoAssignShift } from "@/lib/autoAssign";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -193,6 +196,8 @@ export default function ShiftBoard() {
   const [savedShift, setSavedShift] = useState<Shift | null>(null);
   const [draftShiftId, setDraftShiftId] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [autoAssignOpen, setAutoAssignOpen] = useState(false);
+  const [selectedAreas, setSelectedAreas] = useState<string[]>(SERVICE_AREAS.map(a => a.id));
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -410,6 +415,11 @@ export default function ShiftBoard() {
           </div>
           <div className="flex gap-2 flex-wrap">
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button variant="outline" onClick={() => setAutoAssignOpen(true)} className="gap-2 transition-colors hover:bg-purple-500 hover:text-white border-purple-500/30">
+                <Wand2 className="w-4 h-4" /> Avtomatik böl
+              </Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button variant="outline" onClick={() => setNotesOpen(true)} className="gap-2 transition-colors hover:bg-primary hover:text-white">
                 <NotebookPen className="w-4 h-4" /> Gün sonu qeydləri
               </Button>
@@ -538,6 +548,72 @@ export default function ShiftBoard() {
           <DialogFooter>
             <Button onClick={() => { setNotesOpen(false); toast.success("Qeydlər əlavə edildi"); }} className="bg-gradient-to-r from-primary to-purple-600">
               Təsdiqlə
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Avtomatik bölgü dialoqu */}
+      <Dialog open={autoAssignOpen} onOpenChange={setAutoAssignOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Avtomatik Bölgü</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">Hansı sahələr üzrə avtomatik bölgü aparılsın?</p>
+            <div className="flex items-center space-x-2 pb-2 border-b">
+              <Checkbox 
+                id="select-all" 
+                checked={selectedAreas.length === SERVICE_AREAS.length}
+                onCheckedChange={(checked) => {
+                  if (checked) setSelectedAreas(SERVICE_AREAS.map(a => a.id));
+                  else setSelectedAreas([]);
+                }}
+              />
+              <label
+                htmlFor="select-all"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+              >
+                Hamısını seç
+              </label>
+            </div>
+            <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2">
+              {SERVICE_AREAS.map((area) => (
+                <div key={area.id} className="flex items-center space-x-2">
+                  <Checkbox 
+                    id={`area-${area.id}`} 
+                    checked={selectedAreas.includes(area.id)}
+                    onCheckedChange={(checked) => {
+                      if (checked) setSelectedAreas([...selectedAreas, area.id]);
+                      else setSelectedAreas(selectedAreas.filter(id => id !== area.id));
+                    }}
+                  />
+                  <label
+                    htmlFor={`area-${area.id}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    {area.name}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              onClick={() => {
+                const result = autoAssignShift(slots, selectedAreas, shiftVolunteers, assignments);
+                setAssignments(result.assignments);
+                setAutoAssignOpen(false);
+                if (result.unfilledCount === 0) {
+                  toast.success(`${result.filledCount} xana avtomatik dolduruldu`);
+                } else {
+                  toast.warning(`${result.filledCount} xana dolduruldu, ${result.unfilledCount} xana üçün uyğun könüllü tapılmadı (2.5 saat qaydası və ya məşğulluq səbəbiylə)`);
+                }
+              }} 
+              disabled={selectedAreas.length === 0}
+              className="bg-gradient-to-r from-primary to-purple-600 text-white"
+            >
+              Başla
             </Button>
           </DialogFooter>
         </DialogContent>

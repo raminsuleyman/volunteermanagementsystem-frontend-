@@ -57,7 +57,7 @@ import {
   Wand2,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { autoAssignShift } from "@/lib/autoAssign";
+import { autoAssignShift, timeToMinutes, MIN_SAME_AREA_GAP_MINUTES } from "@/lib/autoAssign";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -68,10 +68,12 @@ function VolunteerChip({
   volunteer,
   dragId,
   assignedCount,
+  isViolating,
 }: {
   volunteer: Volunteer;
   dragId: string;
   assignedCount?: number;
+  isViolating?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: dragId });
   return (
@@ -80,11 +82,12 @@ function VolunteerChip({
       {...listeners}
       {...attributes}
       className={cn(
-        "flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-medium shadow-sm cursor-grab active:cursor-grabbing select-none touch-none transition-all duration-150",
-        isDragging ? "opacity-40 scale-95" : "hover:border-primary/50 hover:shadow-md"
+        "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium shadow-sm cursor-grab active:cursor-grabbing select-none touch-none transition-all duration-150",
+        isViolating ? "bg-red-50 border-red-500 text-red-700 hover:border-red-600" : "bg-card hover:border-primary/50",
+        isDragging ? "opacity-40 scale-95" : "hover:shadow-md"
       )}
     >
-      <GripVertical className="w-3.5 h-3.5 text-muted-foreground shrink-0 transition-colors group-hover:text-primary" />
+      <GripVertical className={cn("w-3.5 h-3.5 shrink-0 transition-colors group-hover:text-primary", isViolating ? "text-red-500/70" : "text-muted-foreground")} />
       <span className="truncate">{volunteer.firstName} {volunteer.lastName}</span>
       {assignedCount !== undefined && assignedCount > 0 && (
         <Badge variant="outline" className="ml-auto text-[10px] px-1.5 border-primary/40 text-primary">
@@ -102,12 +105,14 @@ function AreaCell({
   volunteerIds,
   volunteers,
   onRemove,
+  checkViolation,
 }: {
   areaId: string;
   areaName: string;
   volunteerIds: string[];
   volunteers: Volunteer[];
   onRemove: (areaId: string, volId: string) => void;
+  checkViolation?: (volId: string, areaId: string) => boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `area:${areaId}` });
   return (
@@ -143,7 +148,11 @@ function AreaCell({
                 className="group flex items-center justify-between gap-1"
               >
                 <div className="flex-1 min-w-0">
-                  <VolunteerChip volunteer={v} dragId={`assigned:${areaId}:${id}`} />
+                  <VolunteerChip 
+                    volunteer={v} 
+                    dragId={`assigned:${areaId}:${id}`} 
+                    isViolating={checkViolation ? checkViolation(id, areaId) : false}
+                  />
                 </div>
                 <button
                   onClick={() => onRemove(areaId, id)}
@@ -391,6 +400,26 @@ export default function ShiftBoard() {
     toast.success("Excel faylı yükləndi");
   };
 
+  const checkViolation = (volId: string, areaId: string) => {
+    const currentSlot = slots.find((s) => s.id === activeSlot);
+    if (!currentSlot) return false;
+    const currentSlotTime = timeToMinutes(currentSlot.start);
+
+    for (const [slotId, slotAssigns] of Object.entries(assignments)) {
+      if (slotId === activeSlot) continue;
+      if (slotAssigns[areaId]?.includes(volId)) {
+        const otherSlot = slots.find((s) => s.id === slotId);
+        if (otherSlot) {
+          const otherSlotTime = timeToMinutes(otherSlot.start);
+          if (Math.abs(currentSlotTime - otherSlotTime) < MIN_SAME_AREA_GAP_MINUTES) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  };
+
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <motion.div 
@@ -509,6 +538,7 @@ export default function ShiftBoard() {
                 volunteerIds={slotAssign[area.id] ?? []}
                 volunteers={volunteers}
                 onRemove={removeFromArea}
+                checkViolation={checkViolation}
               />
             ))}
           </div>

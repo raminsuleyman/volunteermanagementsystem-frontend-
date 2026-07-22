@@ -64,30 +64,16 @@ export function exportShiftToExcel(shift: Shift, volunteers: Volunteer[]) {
   ];
 
   // Rows 4 to 9 (Time Slots)
+  let rowIndexOffset = 4; // Headers are at row 3 (0-indexed 3, so data starts at 4)
   for (const slot of slots) {
-    const areaVolunteers: string[][] = [];
-    let maxVolsInSlot = 1;
-    
+    const row = makeRow(9);
     for (let i = 0; i < areaIds.length; i++) {
       const ids = shift.assignments[slot.id]?.[areaIds[i]] ?? [];
-      const names = ids.map(volName).filter(Boolean);
-      areaVolunteers.push(names);
-      if (names.length > maxVolsInSlot) {
-        maxVolsInSlot = names.length;
-      }
+      // Combine names with newline
+      row[i] = ids.map(volName).filter(Boolean).join("\n");
     }
-
-    for (let j = 0; j < maxVolsInSlot; j++) {
-      const row = makeRow(9);
-      for (let i = 0; i < areaIds.length; i++) {
-        row[i] = areaVolunteers[i][j] || "";
-      }
-      // Saat yalnız ilk sətirdə (slotun əvvəlində) göstərilsin
-      if (j === 0) {
-        row[8] = `${slot.start} - ${slot.end}`;
-      }
-      rows.push(row);
-    }
+    row[8] = `${slot.start} - ${slot.end}`;
+    rows.push(row);
   }
 
   // Row 10 (Empty)
@@ -122,6 +108,16 @@ export function exportShiftToExcel(shift: Shift, volunteers: Volunteer[]) {
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
   
+  // Bütün xanalara baxıb '\n' olanlara (könüllülərin alt-alta olduğu) wrapText xüsusiyyəti əlavə edirik
+  for (const cellAddress in ws) {
+    if (cellAddress[0] === '!') continue;
+    const cell = ws[cellAddress];
+    if (cell && typeof cell.v === 'string' && cell.v.includes('\n')) {
+      if (!cell.s) cell.s = {};
+      cell.s.alignment = { wrapText: true };
+    }
+  }
+
   // Set column widths
   ws["!cols"] = [
     { wch: 18 }, // Sorğu

@@ -607,7 +607,7 @@ export default function ShiftBoard() {
                 if (result.unfilledCount === 0) {
                   toast.success(`${result.filledCount} xana avtomatik dolduruldu`);
                 } else {
-                  toast.warning(`${result.filledCount} xana dolduruldu, ${result.unfilledCount} xana üçün uyğun könüllü tapılmadı (2.5 saat qaydası və ya məşğulluq səbəbiylə)`);
+                  toast.warning(`${result.filledCount} xana dolduruldu, ${result.unfilledCount} xana üçün uyğun könüllü tapılmadı (1.5 saat qaydası və ya məşğulluq səbəbiylə)`);
                 }
               }} 
               disabled={selectedAreas.length === 0}

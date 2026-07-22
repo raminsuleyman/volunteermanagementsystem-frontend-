@@ -1,6 +1,6 @@
 import { TimeSlot, Volunteer, SlotAssignments } from "./types";
 
-export const MIN_SAME_AREA_GAP_MINUTES = 150;
+export const MIN_SAME_AREA_GAP_MINUTES = 90;
 
 export function timeToMinutes(hhmm: string): number {
   const [h, m] = hhmm.split(":").map(Number);
@@ -59,11 +59,18 @@ export function autoAssignShift(
       }
     }
 
+    // Bu slotda əl ilə təyin edilmiş könüllüləri tapırıq ki, onların yerini dəyişməyək
+    const manuallyAssignedVols = new Set<string>();
+    for (const areaId of selectedAreaIds) {
+      if (assignments[slotId][areaId]) {
+        for (const volId of assignments[slotId][areaId]) {
+          manuallyAssignedVols.add(volId);
+        }
+      }
+    }
+
     // Bu slotda hələ heç bir sahəyə təyin edilməmiş könüllüləri tapırıq
-    const unassignedVols = volunteers.filter(vol => {
-      const isAssignedInThisSlot = Object.values(assignments[slotId]).some(volsInArea => volsInArea.includes(vol.id));
-      return !isAssignedInThisSlot;
-    });
+    const unassignedVols = volunteers.filter(vol => !manuallyAssignedVols.has(vol.id));
 
     // Könüllüləri əvvəlki təyinat sayına görə sıralayırıq (ən az xidmət edənlər prioritetlidir)
     unassignedVols.sort((a, b) => {
@@ -73,39 +80,94 @@ export function autoAssignShift(
       return Math.random() - 0.5;
     });
 
+    const autoAssignedThisSlot = new Set<string>();
+
     for (const vol of unassignedVols) {
-      // Bu könüllü üçün 2.5 saat (150 dəqiqə) qaydasını pozmayan uyğun sahələri tapırıq
-      const validAreas = selectedAreaIds.filter(areaId => {
-        if (lastAreaAssignment[vol.id] && lastAreaAssignment[vol.id][areaId] !== undefined) {
-          const lastTime = lastAreaAssignment[vol.id][areaId];
-          if (currentSlotStartTime - lastTime < MIN_SAME_AREA_GAP_MINUTES) {
-            return false;
+      // BFS vasitəsilə ən uyğun (ən az könüllüsü olan) sahəyə yol tapırıq (Augmenting path)
+      const queue: { currentVolId: string, path: {volId: string, areaId: string}[] }[] = [];
+      queue.push({ currentVolId: vol.id, path: [] });
+      
+      const visitedVols = new Set<string>();
+      visitedVols.add(vol.id);
+      const visitedAreas = new Set<string>();
+      
+      const reachableAreas: { areaId: string, finalSize: number, path: {volId: string, areaId: string}[] }[] = [];
+
+      while(queue.length > 0) {
+        const { currentVolId, path } = queue.shift()!;
+        
+        for (const areaId of selectedAreaIds) {
+          // Bu könüllünün bu sahəyə təyin edilib-edilə bilməyəcəyini yoxlayırıq
+          let isValid = true;
+          if (lastAreaAssignment[currentVolId] && lastAreaAssignment[currentVolId][areaId] !== undefined) {
+            const lastTime = lastAreaAssignment[currentVolId][areaId];
+            if (Math.abs(currentSlotStartTime - lastTime) < MIN_SAME_AREA_GAP_MINUTES) {
+              isValid = false;
+            }
+          }
+          
+          if (isValid) {
+            const currentSize = assignments[slotId][areaId].length;
+            const finalSize = currentSize + 1;
+            const newPath = [...path, { volId: currentVolId, areaId }];
+            
+            if (!visitedAreas.has(areaId)) {
+              visitedAreas.add(areaId);
+              reachableAreas.push({ areaId, finalSize, path: newPath });
+              
+              // Daha yaxşı balans üçün bu sahədəki könüllülərin yerini dəyişdirməyə çalışırıq
+              for (const assignedVolId of assignments[slotId][areaId]) {
+                if (!manuallyAssignedVols.has(assignedVolId) && !visitedVols.has(assignedVolId)) {
+                  visitedVols.add(assignedVolId);
+                  queue.push({ currentVolId: assignedVolId, path: newPath });
+                }
+              }
+            }
           }
         }
-        return true;
-      });
+      }
 
-      if (validAreas.length > 0) {
-        // Uyğun sahələr arasından bu slotda ƏN AZ könüllüsü olanı seçirik (bərabər paylanma üçün)
-        validAreas.sort((a, b) => {
-          const countA = assignments[slotId][a].length;
-          const countB = assignments[slotId][b].length;
-          if (countA !== countB) return countA - countB;
-          return Math.random() - 0.5;
+      if (reachableAreas.length > 0) {
+        // Ən az könüllüsü olan və ən qısa yolla çatıla bilən sahəni seçirik
+        reachableAreas.sort((a, b) => {
+          if (a.finalSize !== b.finalSize) return a.finalSize - b.finalSize;
+          return a.path.length - b.path.length;
         });
 
-        const selectedArea = validAreas[0];
-        assignments[slotId][selectedArea].push(vol.id);
+        const best = reachableAreas[0];
         
-        // İzləmə məlumatlarını yenilə
-        if (!lastAreaAssignment[vol.id]) lastAreaAssignment[vol.id] = {};
-        lastAreaAssignment[vol.id][selectedArea] = currentSlotStartTime;
-        volunteerAssignmentCount[vol.id] = (volunteerAssignmentCount[vol.id] || 0) + 1;
-        
+        // Tapılmış yolu tətbiq edirik (könüllülərin yerini dəyişirik)
+        for (const step of best.path) {
+          for (const aId of selectedAreaIds) {
+            const idx = assignments[slotId][aId].indexOf(step.volId);
+            if (idx !== -1) {
+              assignments[slotId][aId].splice(idx, 1);
+            }
+          }
+          assignments[slotId][step.areaId].push(step.volId);
+          autoAssignedThisSlot.add(step.volId);
+        }
         filledCount++;
       } else {
-        // Bu könüllü üçün bu slotda heç bir uyğun sahə tapılmadı (150 dəq qaydası mane oldu)
+        // Bu könüllü üçün heç bir uyğun sahə tapılmadı
         unfilledCount++;
+      }
+    }
+
+    // Slot bitdikdən sonra bu slotda avtomatik təyin edilmiş könüllülərin məlumatlarını yeniləyirik
+    for (const volId of autoAssignedThisSlot) {
+      let assignedAreaId = "";
+      for (const areaId of selectedAreaIds) {
+        if (assignments[slotId][areaId].includes(volId)) {
+          assignedAreaId = areaId;
+          break;
+        }
+      }
+      
+      if (assignedAreaId) {
+        if (!lastAreaAssignment[volId]) lastAreaAssignment[volId] = {};
+        lastAreaAssignment[volId][assignedAreaId] = currentSlotStartTime;
+        volunteerAssignmentCount[volId] = (volunteerAssignmentCount[volId] || 0) + 1;
       }
     }
   }

@@ -3,7 +3,7 @@
  * Hazırlanan sənəd kağız formasına maksimum uyğundur:
  * sətirlər = xidmət sahələri, sütunlar = zaman intervalları.
  */
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
 import {
   NOTE_LABELS,
   SERVICE_AREAS,

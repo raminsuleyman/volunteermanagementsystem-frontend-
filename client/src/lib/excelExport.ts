@@ -65,14 +65,29 @@ export function exportShiftToExcel(shift: Shift, volunteers: Volunteer[]) {
 
   // Rows 4 to 9 (Time Slots)
   for (const slot of slots) {
-    const row = makeRow(9);
+    const areaVolunteers: string[][] = [];
+    let maxVolsInSlot = 1;
+    
     for (let i = 0; i < areaIds.length; i++) {
       const ids = shift.assignments[slot.id]?.[areaIds[i]] ?? [];
-      // Combine names with newline
-      row[i] = ids.map(volName).filter(Boolean).join("\n");
+      const names = ids.map(volName).filter(Boolean);
+      areaVolunteers.push(names);
+      if (names.length > maxVolsInSlot) {
+        maxVolsInSlot = names.length;
+      }
     }
-    row[8] = `${slot.start} - ${slot.end}`;
-    rows.push(row);
+
+    for (let j = 0; j < maxVolsInSlot; j++) {
+      const row = makeRow(9);
+      for (let i = 0; i < areaIds.length; i++) {
+        row[i] = areaVolunteers[i][j] || "";
+      }
+      // Saat yalnız ilk sətirdə (slotun əvvəlində) göstərilsin
+      if (j === 0) {
+        row[8] = `${slot.start} - ${slot.end}`;
+      }
+      rows.push(row);
+    }
   }
 
   // Row 10 (Empty)

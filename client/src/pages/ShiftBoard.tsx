@@ -88,7 +88,7 @@ function VolunteerChip({
       )}
     >
       <GripVertical className={cn("w-3.5 h-3.5 shrink-0 transition-colors group-hover:text-primary", isViolating ? "text-red-500/70" : "text-muted-foreground")} />
-      <span className="truncate">{volunteer.firstName} {volunteer.lastName}</span>
+      <span className="break-words leading-tight">{volunteer.firstName} {volunteer.lastName}</span>
       {assignedCount !== undefined && assignedCount > 0 && (
         <Badge variant="outline" className="ml-auto text-[10px] px-1.5 border-primary/40 text-primary">
           {assignedCount}
@@ -529,7 +529,7 @@ export default function ShiftBoard() {
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             {SERVICE_AREAS.map((area) => (
               <AreaCell
                 key={area.id}

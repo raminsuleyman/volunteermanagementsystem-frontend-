@@ -223,7 +223,7 @@ export default function ArchiveDetail() {
                         {ids.length > 0 ? (
                           <div className="space-y-1.5">
                             {ids.map((vid) => (
-                              <div key={vid} className="rounded-md bg-primary/10 border border-primary/20 px-2 py-1 text-primary-foreground text-xs font-medium shadow-sm hover:scale-105 transition-transform text-foreground">
+                              <div key={vid} className="rounded-md bg-primary/10 border border-primary/20 px-2 py-1 text-primary-foreground text-xs font-medium shadow-sm hover:scale-105 transition-transform" style={{ color: "#551a8b" }}>
                                 {volName(vid)}
                               </div>
                             ))}

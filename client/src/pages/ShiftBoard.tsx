@@ -156,7 +156,7 @@ function AreaCell({
                 </div>
                 <button
                   onClick={() => onRemove(areaId, id)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive p-1.5 rounded-md hover:bg-destructive/10"
+                  className="transition-opacity text-muted-foreground hover:text-destructive p-1.5 rounded-md hover:bg-destructive/10"
                   title="Sahədən çıxar"
                 >
                   <Trash2 className="w-4 h-4" />

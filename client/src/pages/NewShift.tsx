@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { getVolunteers } from "@/lib/store";
 import { SHIFT_TYPES, ShiftType, Volunteer, shiftTypeInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { ArrowRight, Clock, Moon, Sun, Sunset, UserPlus } from "lucide-react";
+import { ArrowRight, CalendarDays, Clock, Moon, Sun, Sunset, UserPlus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -51,6 +51,7 @@ export default function NewShift() {
   const [shiftType, setShiftType] = useState<ShiftType | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [selected, setSelected] = useState<string[]>([]);
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [search, setSearch] = useState("");
@@ -80,7 +81,7 @@ export default function NewShift() {
     );
 
   const canContinue =
-    shiftType && firstName.trim() && lastName.trim() && selected.length > 0;
+    shiftType && firstName.trim() && lastName.trim() && date && selected.length > 0;
 
   const handleContinue = () => {
     if (!canContinue || !shiftType) return;
@@ -89,7 +90,7 @@ export default function NewShift() {
       teamLeaderFirstName: firstName.trim(),
       teamLeaderLastName: lastName.trim(),
       volunteerIds: selected,
-      date: new Date().toISOString().slice(0, 10),
+      date,
     };
     sessionStorage.setItem("dost_draft_shift", JSON.stringify(draft));
     toast.success("Növbə hazırlandı — iş bölgüsünə keçilir");
@@ -168,6 +169,27 @@ export default function NewShift() {
             <div className="space-y-2">
               <Label htmlFor="ln" className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Soyad</Label>
               <Input id="ln" className="transition-shadow focus:shadow-md h-11" placeholder="Məsələn: Vəliyev" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="shift-date" className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <CalendarDays className="w-3.5 h-3.5" /> Növbənin tarixi
+              </Label>
+              <div className="relative">
+                <Input
+                  id="shift-date"
+                  type="date"
+                  max={new Date().toISOString().slice(0, 10)}
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="transition-shadow focus:shadow-md h-11 pl-4"
+                />
+              </div>
+              {date !== new Date().toISOString().slice(0, 10) && (
+                <p className="text-xs text-orange-600 flex items-center gap-1 mt-1">
+                  <Clock className="w-3 h-3" />
+                  Keçmiş tarix seçildi — bu növbə arxivdə "Gecikmə ilə qeyd" kimi işarələnəcək.
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

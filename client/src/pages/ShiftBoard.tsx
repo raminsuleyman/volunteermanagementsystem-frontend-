@@ -32,7 +32,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { exportShiftToExcel } from "@/lib/excelExport";
-import { genId, getVolunteers, saveShift, saveDraft, getShifts, getShiftById } from "@/lib/store";
+import { getVolunteers, saveShift, saveDraft, getShifts, getShiftById } from "@/lib/store";
 import {
   EMPTY_NOTES,
   NOTE_LABELS,
@@ -362,8 +362,8 @@ export default function ShiftBoard() {
   };
 
   const handleSave = async () => {
-    const shift: Shift = {
-      id: draftShiftId || genId("shift"),
+    const shift: Partial<Shift> = {
+      ...(draftShiftId ? { id: draftShiftId } : {}),
       date: draft.date,
       shiftType: draft.shiftType,
       teamLeaderFirstName: draft.teamLeaderFirstName,
@@ -376,7 +376,7 @@ export default function ShiftBoard() {
     };
     try {
       await saveShift(shift, "completed");
-      setSavedShift(shift);
+      setSavedShift({ ...shift, id: draftShiftId ?? "" } as Shift);
       sessionStorage.removeItem("dost_draft_shift");
       toast.success("Növbə yadda saxlanıldı və arxivə əlavə edildi");
     } catch (err) {

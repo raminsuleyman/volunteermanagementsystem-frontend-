@@ -100,7 +100,13 @@ export default function Archive() {
       shifts
         .filter((s) => (dateFilter ? s.date === dateFilter : true))
         .filter((s) => (typeFilter === "all" ? true : s.shiftType === typeFilter))
-        .sort((a, b) => b.savedAt.localeCompare(a.savedAt)),
+        .sort((a, b) => {
+          const dateCompare = b.date.localeCompare(a.date); // yeni tarix əvvəl
+          if (dateCompare !== 0) return dateCompare;
+          // eyni gündə: səhər → günorta → axşam
+          const order: Record<string, number> = { seher: 0, gunorta: 1, axsam: 2 };
+          return (order[a.shiftType] ?? 0) - (order[b.shiftType] ?? 0);
+        }),
     [shifts, dateFilter, typeFilter]
   );
 

@@ -23,7 +23,7 @@ import {
   generateTimeSlots,
   shiftTypeInfo,
 } from "@/lib/types";
-import { ArrowLeft, Download, NotebookPen, Trash2, Edit } from "lucide-react";
+import { ArrowLeft, Clock, Download, NotebookPen, Trash2, Edit } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Link, useLocation, useParams } from "wouter";
@@ -137,6 +137,19 @@ export default function ArchiveDetail() {
               TL: <span className="font-medium text-foreground">{shift.teamLeaderFirstName} {shift.teamLeaderLastName}</span> ·{" "}
               {shift.volunteerIds.length} könüllü
             </p>
+            {shift.savedAt && shift.date !== shift.savedAt.slice(0, 10) && (
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <Badge
+                  variant="outline"
+                  className="text-xs px-2 py-0.5 border-orange-300 bg-orange-50 text-orange-700 flex items-center gap-1.5 shadow-sm"
+                >
+                  <Clock className="w-3 h-3" />
+                  <span>
+                    <strong>Gecikmə ilə qeyd edilib</strong> — sistem tarixi: {new Date(shift.savedAt).toLocaleString("az-AZ", { dateStyle: "medium", timeStyle: "short" })}
+                  </span>
+                </Badge>
+              </div>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">

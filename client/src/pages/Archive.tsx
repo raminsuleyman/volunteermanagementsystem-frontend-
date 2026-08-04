@@ -16,7 +16,7 @@ import {
 import { exportShiftToExcel } from "@/lib/excelExport";
 import { getShifts, getVolunteers, deleteShift } from "@/lib/store";
 import { SHIFT_TYPES, Shift, Volunteer, shiftTypeInfo } from "@/lib/types";
-import { Calendar, Download, Eye, Users, Trash2 } from "lucide-react";
+import { Calendar, Clock, Download, Eye, Users, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Link, useLocation } from "wouter";
@@ -222,6 +222,17 @@ export default function Archive() {
                         <div className="flex items-center gap-1.5">
                           <Users className="w-3.5 h-3.5" /> <span className="text-primary/80">{s.volunteerIds.length} könüllü</span>
                         </div>
+                        {s.savedAt && s.date !== s.savedAt.slice(0, 10) && (
+                          <div className="flex items-center gap-1 pt-0.5">
+                            <Badge
+                              variant="outline"
+                              className="text-xs px-1.5 py-0 border-orange-300 bg-orange-50 text-orange-700 flex items-center gap-1"
+                            >
+                              <Clock className="w-2.5 h-2.5" />
+                              Gecikmə ilə qeyd — {s.savedAt.slice(0, 10)}
+                            </Badge>
+                          </div>
+                        )}
                       </div>
                       <div className="flex gap-2 pt-1">
                         {s.status === "draft" ? (

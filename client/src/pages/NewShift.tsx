@@ -187,7 +187,7 @@ export default function NewShift() {
               {date !== new Date().toISOString().slice(0, 10) && (
                 <p className="text-xs text-orange-600 flex items-center gap-1 mt-1">
                   <Clock className="w-3 h-3" />
-                  Keçmiş tarix seçildi — bu növbə arxivdə "Gecikmə ilə qeyd" kimi işarələnəcək.
+                  Keçmiş tarix seçildi — bu növbə arxivdə "Qeyd olunduğu tarix" kimi işarələnəcək.
                 </p>
               )}
             </div>

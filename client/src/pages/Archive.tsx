@@ -235,7 +235,7 @@ export default function Archive() {
                               className="text-xs px-1.5 py-0 border-orange-300 bg-orange-50 text-orange-700 flex items-center gap-1"
                             >
                               <Clock className="w-2.5 h-2.5" />
-                              Gecikmə ilə qeyd — {s.savedAt.slice(0, 10)}
+                              Qeyd olunduğu tarix — {s.savedAt.slice(0, 10)}
                             </Badge>
                           </div>
                         )}

@@ -145,7 +145,7 @@ export default function ArchiveDetail() {
                 >
                   <Clock className="w-3 h-3" />
                   <span>
-                    <strong>Gecikmə ilə qeyd edilib</strong> — sistem tarixi: {new Date(shift.savedAt).toLocaleString("az-AZ", { dateStyle: "medium", timeStyle: "short" })}
+                    <strong>Qeyd olunduğu tarix</strong> — {new Date(shift.savedAt).toLocaleString("az-AZ", { dateStyle: "medium", timeStyle: "short" })}
                   </span>
                 </Badge>
               </div>

@@ -68,10 +68,10 @@ export async function getShifts(status?: "draft" | "completed"): Promise<Shift[]
     const url = status ? `/shifts?status=${status}` : "/shifts";
     const res = await api.get<ApiResponse<Shift[]>>(url);
     if (res.data.success && res.data.data) {
-      return res.data.data.map((s: any) => ({ 
-        ...s, 
+      return res.data.data.map((s: any) => ({
+        ...s,
         id: String(s.id),
-        volunteerIds: s.volunteerIds?.map(String) || [] 
+        volunteerIds: s.volunteerIds?.map(String) || []
       }));
     }
     return [];
@@ -86,8 +86,8 @@ export async function getShiftById(id: string): Promise<Shift | undefined> {
     const res = await api.get<ApiResponse<any>>(`/shifts/${id}`);
     if (res.data.success && res.data.data) {
       const data = res.data.data;
-      return { 
-        ...data, 
+      return {
+        ...data,
         id: String(data.id),
         volunteerIds: data.volunteerIds?.map(String) || [],
         assignments: data.assignments ? Object.fromEntries(

@@ -116,7 +116,7 @@ export default function Archive() {
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="container py-8 space-y-6"
       variants={containerVariants}
       initial="hidden"
@@ -172,7 +172,7 @@ export default function Archive() {
 
       <AnimatePresence mode="wait">
         {isLoading ? (
-          <motion.div 
+          <motion.div
             key="loading"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -182,24 +182,24 @@ export default function Archive() {
             <p className="text-muted-foreground mt-4">Yüklənir...</p>
           </motion.div>
         ) : filtered.length === 0 ? (
-          <motion.div 
+          <motion.div
             key="empty"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             className="flex flex-col items-center py-12 text-center"
           >
-            <motion.img 
+            <motion.img
               animate={{ y: [0, -10, 0] }}
               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-              src={EMPTY_IMG} 
-              alt="Boş arxiv" 
-              className="w-44 h-44 object-contain opacity-90 drop-shadow-xl" 
+              src={EMPTY_IMG}
+              alt="Boş arxiv"
+              className="w-44 h-44 object-contain opacity-90 drop-shadow-xl"
             />
             <p className="text-muted-foreground mt-4">Bu filtrlərə uyğun növbə tapılmadı.</p>
           </motion.div>
         ) : (
-          <motion.div 
+          <motion.div
             key="grid"
             className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"
             variants={containerVariants}

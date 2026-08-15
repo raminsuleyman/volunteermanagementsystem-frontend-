@@ -89,7 +89,7 @@ export default function Volunteers() {
     setVolunteers(await getVolunteers());
     setIsLoading(false);
   };
-  
+
   useEffect(() => {
     refresh();
   }, []);
@@ -182,7 +182,7 @@ export default function Volunteers() {
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="container py-8 space-y-6"
       variants={containerVariants}
       initial="hidden"
@@ -234,8 +234,8 @@ export default function Volunteers() {
             <TableBody>
               <AnimatePresence>
                 {active.map((v) => (
-                  <TableRow 
-                    key={v.id} 
+                  <TableRow
+                    key={v.id}
                     className="transition-colors hover:bg-muted/30 group"
                   >
                     <TableCell className="font-medium">

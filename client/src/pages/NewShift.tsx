@@ -98,7 +98,7 @@ export default function NewShift() {
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="container py-8 space-y-8 max-w-4xl"
       variants={containerVariants}
       initial="hidden"
@@ -255,10 +255,10 @@ export default function NewShift() {
 
       <motion.div variants={itemVariants} className="flex justify-end pt-4">
         <motion.div whileHover={canContinue ? { scale: 1.05 } : {}} whileTap={canContinue ? { scale: 0.95 } : {}}>
-          <Button 
-            size="lg" 
-            disabled={!canContinue} 
-            onClick={handleContinue} 
+          <Button
+            size="lg"
+            disabled={!canContinue}
+            onClick={handleContinue}
             className={cn("gap-2 shadow-lg transition-all h-12 px-8 text-base", canContinue ? "bg-gradient-to-r from-primary to-purple-600" : "bg-muted text-muted-foreground")}
           >
             İş bölgüsünə keç <ArrowRight className="w-5 h-5" />

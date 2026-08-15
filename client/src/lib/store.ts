@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Shift, Volunteer } from "./types";
 
-const API_BASE = import.meta.env.VITE_API_URL || "https://volunteermanagementsystem-backend.onrender.com/api";
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
 const api = axios.create({
   baseURL: API_BASE,

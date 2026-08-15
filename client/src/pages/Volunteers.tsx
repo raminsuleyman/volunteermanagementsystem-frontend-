@@ -208,6 +208,8 @@ export default function Volunteers() {
       <motion.div variants={itemVariants} className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
+          id="volunteer-search"
+          name="volunteer-search"
           className="pl-9 transition-shadow focus:shadow-md focus:border-primary/50"
           placeholder="Ad və ya soyada görə axtar..."
           value={search}
@@ -361,11 +363,11 @@ export default function Volunteers() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Ad</Label>
-                <Input className="transition-shadow focus:shadow-sm" value={form.firstName} onChange={(e) => setForm((p) => ({ ...p, firstName: e.target.value }))} />
+                <Input id="vol-firstName" name="firstName" className="transition-shadow focus:shadow-sm" value={form.firstName} onChange={(e) => setForm((p) => ({ ...p, firstName: e.target.value }))} />
               </div>
               <div className="space-y-1.5">
                 <Label>Soyad</Label>
-                <Input className="transition-shadow focus:shadow-sm" value={form.lastName} onChange={(e) => setForm((p) => ({ ...p, lastName: e.target.value }))} />
+                <Input id="vol-lastName" name="lastName" className="transition-shadow focus:shadow-sm" value={form.lastName} onChange={(e) => setForm((p) => ({ ...p, lastName: e.target.value }))} />
               </div>
             </div>
             <div className="space-y-2">
@@ -386,15 +388,15 @@ export default function Volunteers() {
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Klub sayı</Label>
-                <Input className="transition-shadow focus:shadow-sm" type="number" min="0" value={form.clubCount} onChange={(e) => setForm((p) => ({ ...p, clubCount: e.target.value }))} />
+                <Input id="vol-clubCount" name="clubCount" className="transition-shadow focus:shadow-sm" type="number" min="0" value={form.clubCount} onChange={(e) => setForm((p) => ({ ...p, clubCount: e.target.value }))} />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Təşəbbüs sayı</Label>
-                <Input className="transition-shadow focus:shadow-sm" type="number" min="0" value={form.initiativeCount} onChange={(e) => setForm((p) => ({ ...p, initiativeCount: e.target.value }))} />
+                <Input id="vol-initiativeCount" name="initiativeCount" className="transition-shadow focus:shadow-sm" type="number" min="0" value={form.initiativeCount} onChange={(e) => setForm((p) => ({ ...p, initiativeCount: e.target.value }))} />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">İcazə saatı</Label>
-                <Input className="transition-shadow focus:shadow-sm" type="number" min="0" value={form.remainingLeaveHours} onChange={(e) => setForm((p) => ({ ...p, remainingLeaveHours: e.target.value }))} />
+                <Input id="vol-remainingLeaveHours" name="remainingLeaveHours" className="transition-shadow focus:shadow-sm" type="number" min="0" value={form.remainingLeaveHours} onChange={(e) => setForm((p) => ({ ...p, remainingLeaveHours: e.target.value }))} />
               </div>
             </div>
           </div>

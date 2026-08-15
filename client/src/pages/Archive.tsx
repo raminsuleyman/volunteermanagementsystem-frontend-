@@ -136,6 +136,8 @@ export default function Archive() {
         <div className="relative">
           <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           <Input
+            id="archive-date-filter"
+            name="archive-date-filter"
             type="date"
             className="pl-9 w-44 transition-shadow focus:shadow-md"
             value={dateFilter}

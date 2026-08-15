@@ -216,7 +216,7 @@ export default function NewShift() {
           <CardContent className="space-y-5">
             <div className="flex items-center gap-2 relative">
               <UserPlus className="w-4 h-4 text-muted-foreground absolute left-3" />
-              <Input className="pl-9 h-11 transition-shadow focus:shadow-md" placeholder="Könüllü axtar..." value={search} onChange={(e) => setSearch(e.target.value)} />
+              <Input id="newshift-volunteer-search" name="volunteer-search" className="pl-9 h-11 transition-shadow focus:shadow-md" placeholder="Könüllü axtar..." value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             <div className="grid sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
               <AnimatePresence>

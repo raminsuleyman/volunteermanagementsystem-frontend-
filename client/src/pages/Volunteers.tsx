@@ -256,10 +256,14 @@ export default function Volunteers() {
                     </TableRow>
                   ))
                 ) : (
-                  active.map((v) => (
-                    <TableRow
+                  active.map((v, idx) => (
+                    <motion.tr
                       key={v.id}
-                      className="transition-colors hover:bg-muted/30 group"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className="border-b transition-colors hover:bg-muted/30 group"
                     >
                       <TableCell className="font-medium">
                         {v.firstName} {v.lastName}
@@ -308,7 +312,7 @@ export default function Volunteers() {
                           </motion.div>
                         </div>
                       </TableCell>
-                    </TableRow>
+                    </motion.tr>
                   ))
                 )}
               </AnimatePresence>
@@ -354,9 +358,9 @@ export default function Volunteers() {
             active.map((v, idx) => (
               <motion.div
                 key={v.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
                 transition={{ delay: idx * 0.05 }}
               >
                 <Card className="border-l-4 border-l-primary/50 hover:shadow-md transition-all active:scale-[0.98]">

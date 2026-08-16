@@ -212,7 +212,7 @@ export default function Archive() {
                 <motion.div key={s.id} variants={itemVariants} whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }}>
                   <Card className="border-l-4 border-l-primary/60 hover:border-l-primary hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-card to-card/50">
                     <CardContent className="pt-5 space-y-3">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="font-bold text-lg font-mono-time">{s.date}</div>
                         <div className="flex gap-2">
                           {s.status === "draft" && (

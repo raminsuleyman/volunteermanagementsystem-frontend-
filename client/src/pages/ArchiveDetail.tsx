@@ -207,7 +207,7 @@ export default function ArchiveDetail() {
 
       {/* İş bölgüsü cədvəli (desktop) */}
       <motion.div variants={itemVariants}>
-        <Card className="hidden md:block overflow-x-auto shadow-sm hover:shadow-md transition-shadow">
+        <Card className="hidden lg:block overflow-x-auto shadow-sm hover:shadow-md transition-shadow">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50 hover:bg-muted/50">
@@ -254,8 +254,8 @@ export default function ArchiveDetail() {
         </Card>
       </motion.div>
 
-      {/* Mobil: interval kartları */}
-      <div className="md:hidden space-y-3">
+      {/* Mobil/Tablet: interval kartları */}
+      <div className="lg:hidden space-y-3">
         {slots.map((s, idx) => {
           const slotA = shift.assignments[s.id] ?? {};
           const entries = SERVICE_AREAS.filter((a) => (slotA[a.id] ?? []).length > 0);

@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   addVolunteer,
   deactivateVolunteer,
@@ -233,68 +234,84 @@ export default function Volunteers() {
             </TableHeader>
             <TableBody>
               <AnimatePresence>
-                {active.map((v) => (
-                  <TableRow
-                    key={v.id}
-                    className="transition-colors hover:bg-muted/30 group"
-                  >
-                    <TableCell className="font-medium">
-                      {v.firstName} {v.lastName}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1.5 flex-wrap">
-                        {v.shifts.map((s) => (
-                          <Badge key={s} variant="outline" className={cn(SHIFT_BADGE[s], "transition-transform hover:scale-105")}>
-                            {shiftTypeInfo(s).label}
-                          </Badge>
-                        ))}
-                        {v.shifts.length === 0 && (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center font-mono-time">{v.clubCount}</TableCell>
-                    <TableCell className="text-center font-mono-time">{v.initiativeCount}</TableCell>
-                    <TableCell className="text-center">
-                      <span
-                        className={cn(
-                          "font-mono-time font-medium px-2 py-1 rounded-md",
-                          v.remainingLeaveHours > 0 ? "bg-destructive/10 text-destructive" : "bg-emerald-50 text-emerald-600"
-                        )}
-                      >
-                        {v.remainingLeaveHours} saat
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
-                        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                          <Button variant="ghost" size="icon" onClick={() => openEdit(v)} title="Redaktə et">
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                        </motion.div>
-                        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleteTarget(v)}
-                            title="Sil"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </motion.div>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, idx) => (
+                    <TableRow key={`skeleton-${idx}`} className="bg-transparent border-b">
+                      <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Skeleton className="h-6 w-16 rounded-full" />
+                          <Skeleton className="h-6 w-16 rounded-full" />
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center"><Skeleton className="h-5 w-6 mx-auto" /></TableCell>
+                      <TableCell className="text-center"><Skeleton className="h-5 w-6 mx-auto" /></TableCell>
+                      <TableCell className="text-center"><Skeleton className="h-6 w-14 mx-auto rounded-md" /></TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Skeleton className="h-8 w-8 rounded-md" />
+                          <Skeleton className="h-8 w-8 rounded-md" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  active.map((v) => (
+                    <TableRow
+                      key={v.id}
+                      className="transition-colors hover:bg-muted/30 group"
+                    >
+                      <TableCell className="font-medium">
+                        {v.firstName} {v.lastName}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1.5 flex-wrap">
+                          {v.shifts.map((s) => (
+                            <Badge key={s} variant="outline" className={cn(SHIFT_BADGE[s], "transition-transform hover:scale-105")}>
+                              {shiftTypeInfo(s).label}
+                            </Badge>
+                          ))}
+                          {v.shifts.length === 0 && (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center font-mono-time">{v.clubCount}</TableCell>
+                      <TableCell className="text-center font-mono-time">{v.initiativeCount}</TableCell>
+                      <TableCell className="text-center">
+                        <span
+                          className={cn(
+                            "font-mono-time font-medium px-2 py-1 rounded-md",
+                            v.remainingLeaveHours > 0 ? "bg-destructive/10 text-destructive" : "bg-emerald-50 text-emerald-600"
+                          )}
+                        >
+                          {v.remainingLeaveHours} saat
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
+                          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                            <Button variant="ghost" size="icon" onClick={() => openEdit(v)} title="Redaktə et">
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                          </motion.div>
+                          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeleteTarget(v)}
+                              title="Sil"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </motion.div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </AnimatePresence>
-              {isLoading && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
-                    Yüklənir...
-                  </TableCell>
-                </TableRow>
-              )}
               {!isLoading && active.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
@@ -310,43 +327,68 @@ export default function Volunteers() {
       {/* Mobil kartlar */}
       <div className="md:hidden space-y-3">
         <AnimatePresence>
-          {active.map((v, idx) => (
-            <motion.div
-              key={v.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ delay: idx * 0.05 }}
-            >
-              <Card className="border-l-4 border-l-primary/50 hover:shadow-md transition-all active:scale-[0.98]">
-                <CardContent className="pt-4 space-y-2.5">
+          {isLoading ? (
+            Array.from({ length: 4 }).map((_, idx) => (
+              <Card key={`mob-skel-${idx}`} className="border-l-4 border-l-muted">
+                <CardContent className="pt-4 space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="font-semibold">{v.firstName} {v.lastName}</div>
+                    <Skeleton className="h-6 w-32" />
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(v)}>
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setDeleteTarget(v)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <Skeleton className="h-8 w-8 rounded-md" />
+                      <Skeleton className="h-8 w-8 rounded-md" />
                     </div>
                   </div>
-                  <div className="flex gap-1.5 flex-wrap">
-                    {v.shifts.map((s) => (
-                      <Badge key={s} variant="outline" className={SHIFT_BADGE[s]}>
-                        {shiftTypeInfo(s).label}
-                      </Badge>
-                    ))}
+                  <div className="flex gap-2">
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                    <Skeleton className="h-6 w-20 rounded-full" />
                   </div>
-                  <div className="grid grid-cols-3 gap-2 text-sm">
-                    <div><span className="text-muted-foreground">Klub:</span> <span className="font-mono-time">{v.clubCount}</span></div>
-                    <div><span className="text-muted-foreground">Təşəbbüs:</span> <span className="font-mono-time">{v.initiativeCount}</span></div>
-                    <div><span className="text-muted-foreground">İcazə:</span> <span className="font-mono-time">{v.remainingLeaveHours}s</span></div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Skeleton className="h-5 w-full" />
+                    <Skeleton className="h-5 w-full" />
+                    <Skeleton className="h-5 w-full" />
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
-          ))}
+            ))
+          ) : (
+            active.map((v, idx) => (
+              <motion.div
+                key={v.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ delay: idx * 0.05 }}
+              >
+                <Card className="border-l-4 border-l-primary/50 hover:shadow-md transition-all active:scale-[0.98]">
+                  <CardContent className="pt-4 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="font-semibold">{v.firstName} {v.lastName}</div>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(v)}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setDeleteTarget(v)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {v.shifts.map((s) => (
+                        <Badge key={s} variant="outline" className={SHIFT_BADGE[s]}>
+                          {shiftTypeInfo(s).label}
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div><span className="text-muted-foreground">Klub:</span> <span className="font-mono-time">{v.clubCount}</span></div>
+                      <div><span className="text-muted-foreground">Təşəbbüs:</span> <span className="font-mono-time">{v.initiativeCount}</span></div>
+                      <div><span className="text-muted-foreground">İcazə:</span> <span className="font-mono-time">{v.remainingLeaveHours}s</span></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))
+          )}
         </AnimatePresence>
       </div>
 
